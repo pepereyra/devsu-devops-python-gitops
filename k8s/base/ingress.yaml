@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: devsu-devops-python
+  namespace: devsu-demo
+spec:
+  rules:
+    - host: devsu-demo.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: devsu-devops-python
+                port:
+                  number: 80

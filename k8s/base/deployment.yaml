@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devsu-devops-python
+  namespace: devsu-demo
+spec:
+  replicas: 2
+
+  revisionHistoryLimit: 5
+
+  selector:
+    matchLabels:
+      app: devsu-devops-python
+
+  template:
+    metadata:
+      labels:
+        app: devsu-devops-python
+
+    spec:
+      containers:
+        - name: devsu-devops-python
+
+          image: ghcr.io/pepereyra/devsu-devops-python:latest
+
+          command:
+            - sh
+            - -c
+
+          args:
+            - |
+              python manage.py migrate &&
+              gunicorn demo.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 60
+
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 8000
+
+          envFrom:
+            - configMapRef:
+                name: devsu-devops-python-config
+            - secretRef:
+                name: devsu-devops-python-secret
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+          livenessProbe:
+            httpGet:
+              path: /api/health/live/
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+
+          readinessProbe:
+            httpGet:
+              path: /api/health/ready/
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
