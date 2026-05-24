@@ -10,7 +10,7 @@ resources:
 
 images:
   - name: ghcr.io/pepereyra/devsu-devops-python
-    newTag: c5fd300f29763328b8a0647f387febd2dd6afa50
+    newTag: 7e1b83da164c053ebd4c1551bc87ca9cd373b3f2
 
 replicas:
   - name: devsu-devops-python
