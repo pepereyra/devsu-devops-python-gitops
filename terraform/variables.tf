@@ -32,3 +32,27 @@ variable "cluster_name" {
   type        = string
   default     = "devsu-devops-gke"
 }
+
+variable "db_instance_name" {
+  description = "Cloud SQL MySQL instance name."
+  type        = string
+  default     = "devsu-devops-mysql"
+}
+
+variable "db_name" {
+  description = "Application database name."
+  type        = string
+  default     = "devsu_demo"
+}
+
+variable "db_user" {
+  description = "Application database user."
+  type        = string
+  default     = "devsu_user"
+}
+
+variable "db_password" {
+  description = "Application database password."
+  type        = string
+  sensitive   = true
+}

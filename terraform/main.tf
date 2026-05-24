@@ -25,3 +25,42 @@ resource "google_container_cluster" "main" {
     channel = "REGULAR"
   }
 }
+
+resource "google_sql_database_instance" "mysql" {
+  name             = var.db_instance_name
+  database_version = "MYSQL_8_0"
+  region           = var.region
+
+  deletion_protection = false
+
+  settings {
+    tier              = "db-f1-micro"
+    availability_type = "ZONAL"
+    disk_size         = 10
+    disk_type         = "PD_HDD"
+
+    backup_configuration {
+      enabled = false
+    }
+
+    ip_configuration {
+      ipv4_enabled = true
+
+      authorized_networks {
+        name  = "gke-public-access"
+        value = "0.0.0.0/0"
+      }
+    }
+  }
+}
+
+resource "google_sql_database" "app" {
+  name     = var.db_name
+  instance = google_sql_database_instance.mysql.name
+}
+
+resource "google_sql_user" "app" {
+  name     = var.db_user
+  instance = google_sql_database_instance.mysql.name
+  password = var.db_password
+}

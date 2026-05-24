@@ -1,4 +1,4 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: devsu-demo
+  name: dev-devsu-demo

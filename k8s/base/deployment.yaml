@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: devsu-devops-python
-  namespace: devsu-demo
 spec:
   replicas: 2
 
@@ -24,14 +23,15 @@ spec:
           image: ghcr.io/pepereyra/devsu-devops-python:latest
 
           command:
-            - sh
-            - -c
-
+            - gunicorn
           args:
-            - |
-              python manage.py migrate &&
-              gunicorn demo.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 60
-
+            - demo.wsgi:application
+            - --bind
+            - 0.0.0.0:8000
+            - --workers
+            - "2"
+            - --timeout
+            - "60"
           imagePullPolicy: Always
 
           ports:
@@ -40,8 +40,12 @@ spec:
           envFrom:
             - configMapRef:
                 name: devsu-devops-python-config
+
             - secretRef:
                 name: devsu-devops-python-secret
+
+            - secretRef:
+                name: devsu-devops-python-db-secret
 
           resources:
             requests:

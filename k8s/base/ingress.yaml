@@ -1,8 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
+
 metadata:
   name: devsu-devops-python
-  namespace: devsu-demo
 spec:
   rules:
     - host: devsu-demo.local

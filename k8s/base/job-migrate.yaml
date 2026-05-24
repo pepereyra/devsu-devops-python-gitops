@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: devsu-devops-python-migrate
+  labels:
+    app: devsu-devops-python
+    app.kubernetes.io/component: migration
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: ghcr.io/pepereyra/devsu-devops-python:latest
+          command:
+            - python
+            - manage.py
+            - migrate
+          envFrom:
+            - configMapRef:
+                name: devsu-devops-python-config
+            - secretRef:
+                name: devsu-devops-python-secret
+            - secretRef:
+                name: devsu-devops-python-db-secret
