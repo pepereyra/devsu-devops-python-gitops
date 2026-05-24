@@ -9,38 +9,44 @@ This directory contains the Kubernetes manifests used to deploy the application 
 ```text
 k8s/
 ├── base/
-│   ├── namespace.yaml
-│   ├── configmap.yaml
 │   ├── deployment.yaml
 │   ├── service.yaml
 │   ├── ingress.yaml
 │   ├── hpa.yaml
-│   ├── secret.example.yaml
-│   └── kustomization.yaml
+│   ├── job-migrate.yaml
+│   ├── kustomization.yaml
+│   ├── devsu-devops-python-secret.example.yaml
+│   └── devsu-devops-python-db-secret.example.yaml
 │
-└── overlays/
-    ├── dev/
-    │   └── kustomization.yaml
-    │
-    └── prod/
-        └── kustomization.yaml
+├── overlays/
+│   ├── dev/
+│   │   ├── namespace.yaml
+│   │   ├── configmap.yaml
+│   │   └── kustomization.yaml
+│   │
+│   └── prod/
+│       ├── namespace.yaml
+│       ├── configmap.yaml
+│       └── kustomization.yaml
+│
+└── scripts/
+    └── deploy-dev.sh
 ```
 
 ---
 
 # Base Resources
 
-The `base/` directory contains reusable Kubernetes manifests shared across environments.
+The `base/` directory contains reusable manifests shared across environments.
 
-Included resources:
+Resources include:
 
-- Namespace
-- ConfigMap
 - Deployment
 - Service
 - Ingress
-- HorizontalPodAutoscaler
-- Secret template
+- HPA
+- Migration Job
+- Secret templates
 
 ---
 
@@ -50,42 +56,65 @@ The `overlays/` directory contains environment-specific customizations.
 
 ## Dev Overlay
 
-Current characteristics:
+Characteristics:
 
 - 2 replicas
-- development-oriented configuration
-- automatic image updates from CI/CD pipeline
+- development namespace
+- automatic image updates
+- development configuration
+
+Namespace:
+
+```text
+dev-devsu-demo
+```
+
+---
 
 ## Prod Overlay
 
-Production-oriented configuration:
+Characteristics:
 
-- prepared for immutable image tags
-- intended for controlled promotion workflows
+- production namespace
+- immutable image promotion
+- production configuration
 
----
+Namespace:
 
-# Deployment
-
-## Apply Dev Environment
-
-```bash
-kubectl apply -k k8s/overlays/dev
-```
-
-## Apply Prod Environment
-
-```bash
-kubectl apply -k k8s/overlays/prod
+```text
+prod-devsu-demo
 ```
 
 ---
 
-# Validate Resources
+# Deployment Script
+
+The deployment script automates:
+
+- Namespace creation
+- Secret creation
+- Terraform output retrieval
+- Database migration execution
+- Kubernetes deployment
+- Rollout validation
+
+Execute:
 
 ```bash
-kubectl get all -n devsu-demo
+./k8s/scripts/deploy-dev.sh
 ```
+
+---
+
+# Security Hardening
+
+Implemented controls:
+
+- Non-root execution
+- Read-only root filesystem
+- Dropped Linux capabilities
+- Pod security contexts
+- Kubernetes Secrets
 
 ---
 
@@ -97,7 +126,9 @@ kubectl get all -n devsu-demo
 /api/health/live/
 ```
 
-Used to validate that the application process is alive.
+Validates application process health.
+
+---
 
 ## Readiness Probe
 
@@ -105,13 +136,13 @@ Used to validate that the application process is alive.
 /api/health/ready/
 ```
 
-Used to validate that the application is ready to receive traffic and that required database tables exist.
+Validates application readiness and database availability.
 
 ---
 
 # Horizontal Pod Autoscaler
 
-The deployment includes an HPA configuration:
+Current configuration:
 
 ```text
 Minimum replicas: 2
@@ -122,17 +153,17 @@ CPU target: 70%
 Validate HPA:
 
 ```bash
-kubectl get hpa -n devsu-demo
+kubectl get hpa -n dev-devsu-demo
 ```
 
 ---
 
 # Public Access
 
-The application can be exposed publicly using:
+Application exposure uses:
 
 ```text
-Service type: LoadBalancer
+Kubernetes LoadBalancer Service
 ```
 
 Validated endpoints:
@@ -149,24 +180,23 @@ Validated endpoints:
 
 Sensitive values are managed using Kubernetes Secrets.
 
-Example:
+Application secret:
 
 ```bash
-kubectl -n devsu-demo create secret generic devsu-devops-python-secret \
-  --from-literal=DJANGO_SECRET_KEY='change-me'
+kubectl create secret generic devsu-devops-python-secret
 ```
 
-The real secret values are intentionally excluded from Git.
+Database secret:
+
+```bash
+kubectl create secret generic devsu-devops-python-db-secret
+```
+
+Real secret values are intentionally excluded from Git.
 
 ---
 
 # GitOps Workflow
-
-Container images are built and published from the application repository.
-
-The GitOps repository receives automatic image tag updates from the CI/CD pipeline.
-
-Workflow summary:
 
 ```text
 Application Repository
@@ -177,5 +207,18 @@ Build and publish image
     ↓
 Update image tag in overlay
     ↓
-Kubernetes deployment
+Deployment through Kubernetes manifests
 ```
+
+---
+
+# Notes
+
+The deployment was designed to demonstrate:
+
+- Kubernetes administration
+- GitOps workflows
+- Production-oriented deployments
+- Security best practices
+- CI/CD integration
+- Infrastructure automation

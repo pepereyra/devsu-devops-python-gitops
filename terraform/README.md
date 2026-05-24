@@ -1,22 +1,27 @@
 # Terraform - GKE Autopilot Infrastructure
 
-This directory contains the Terraform code required to provision the cloud infrastructure used to deploy the `devsu-devops-python` application on Google Kubernetes Engine (GKE) Autopilot.
+This directory contains the Terraform code required to provision the infrastructure used by the `devsu-devops-python` application.
+
+Provisioned infrastructure is hosted on Google Cloud Platform.
 
 ---
 
 # Provisioned Resources
 
-The Terraform configuration creates:
+Terraform creates the following resources:
 
 - VPC Network
 - Subnet
 - GKE Autopilot Cluster
+- Cloud SQL MySQL Instance
+- Cloud SQL Database
+- Cloud SQL User
 
 ---
 
 # Requirements
 
-The following tools are required:
+Required tools:
 
 - Terraform >= 1.6
 - Google Cloud SDK (`gcloud`)
@@ -32,7 +37,7 @@ Authenticate with Google Cloud:
 gcloud auth login
 ```
 
-Set the target project:
+Set target project:
 
 ```bash
 gcloud config set project <PROJECT_ID>
@@ -42,7 +47,7 @@ gcloud config set project <PROJECT_ID>
 
 # Variables
 
-The project uses the following Terraform variables:
+Main variables:
 
 | Variable | Description |
 |---|---|
@@ -51,12 +56,19 @@ The project uses the following Terraform variables:
 | `network_name` | VPC name |
 | `subnet_name` | Subnet name |
 | `cluster_name` | GKE cluster name |
+| `db_instance_name` | Cloud SQL instance name |
+| `db_name` | Application database |
+| `db_user` | Database username |
+| `db_password` | Database password |
 
-Example `terraform.tfvars`:
+---
+
+# Example terraform.tfvars
 
 ```hcl
 project_id = "your-project-id"
 region     = "us-central1"
+db_password = "change-me"
 ```
 
 ---
@@ -69,13 +81,13 @@ Initialize Terraform:
 terraform init
 ```
 
-Review execution plan:
+Review plan:
 
 ```bash
 terraform plan
 ```
 
-Create infrastructure:
+Apply infrastructure:
 
 ```bash
 terraform apply
@@ -89,9 +101,24 @@ terraform output
 
 ---
 
+# Terraform Outputs
+
+Available outputs:
+
+| Output | Description |
+|---|---|
+| `cluster_name` | GKE cluster name |
+| `cluster_location` | Cluster region |
+| `cloud_sql_instance_name` | Cloud SQL instance |
+| `cloud_sql_public_ip` | Database public IP |
+| `cloud_sql_database_name` | Database name |
+| `cloud_sql_user` | Database user |
+
+---
+
 # Configure kubectl
 
-After the cluster is created:
+After infrastructure creation:
 
 ```bash
 gcloud container clusters get-credentials devsu-devops-gke \
@@ -99,42 +126,43 @@ gcloud container clusters get-credentials devsu-devops-gke \
   --project <PROJECT_ID>
 ```
 
-Validate cluster access:
+Validate connectivity:
 
 ```bash
-kubectl config current-context
 kubectl get nodes
 ```
 
 ---
 
-# Deploy Kubernetes Manifests
+# Cost Considerations
 
-From the repository root:
+Infrastructure was intentionally designed to remain lightweight for technical evaluation purposes.
 
-```bash
-kubectl apply -k k8s/overlays/dev
-```
+Resources include:
 
-Validate deployment:
+- GKE Autopilot
+- Small container workloads
+- Minimal Cloud SQL sizing
+- Lightweight networking
 
-```bash
-kubectl get all -n devsu-demo
-```
+Cloud costs may still apply depending on runtime duration.
 
 ---
 
-# Public Access
+# Security Notes
 
-The application can be exposed publicly using a Kubernetes `LoadBalancer` service.
+For simplicity during technical evaluation:
 
-Example endpoints:
+- Cloud SQL uses public IP
+- Authorized networks temporarily allow broad access
+- TLS enforcement is not enabled
 
-```text
-/api/health/live/
-/api/health/ready/
-/api/users/
-```
+Production environments should instead use:
+
+- Private networking
+- Authorized CIDRs
+- Cloud SQL Auth Proxy
+- TLS enforcement
 
 ---
 
@@ -148,25 +176,11 @@ terraform destroy
 
 ---
 
-# Cost Considerations
-
-This infrastructure was designed to remain lightweight for technical evaluation purposes.
-
-The deployment uses:
-
-- GKE Autopilot
-- Small container resource requests
-- Minimal networking resources
-
-However, cloud resources may still generate costs depending on usage time and enabled services.
-
----
-
 # GitOps Integration
 
-Terraform provisions the Kubernetes infrastructure only.
+Terraform provisions infrastructure only.
 
-Application deployment is managed separately through the GitOps repository using:
+Application deployment is managed separately using:
 
 - Kubernetes manifests
 - Kustomize overlays
