@@ -1,7 +1,9 @@
 apiVersion: batch/v1
 kind: Job
+
 metadata:
   name: devsu-devops-python-migrate
+
   labels:
     app: devsu-devops-python
     app.kubernetes.io/component: migration
@@ -11,6 +13,13 @@ spec:
 
   template:
     spec:
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+
       restartPolicy: Never
 
       containers:
@@ -20,9 +29,6 @@ spec:
           imagePullPolicy: Always
 
           securityContext:
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
 

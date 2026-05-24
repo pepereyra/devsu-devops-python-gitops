@@ -2,8 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: devsu-devops-python
+
 spec:
   replicas: 2
+
   revisionHistoryLimit: 5
 
   selector:
@@ -16,17 +18,23 @@ spec:
         app: devsu-devops-python
 
     spec:
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+
       containers:
         - name: devsu-devops-python
+
           image: ghcr.io/pepereyra/devsu-devops-python:latest
           imagePullPolicy: Always
 
           securityContext:
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
+
             capabilities:
               drop:
                 - ALL
@@ -53,8 +61,10 @@ spec:
           envFrom:
             - configMapRef:
                 name: devsu-devops-python-config
+
             - secretRef:
                 name: devsu-devops-python-secret
+
             - secretRef:
                 name: devsu-devops-python-db-secret
 
@@ -62,6 +72,7 @@ spec:
             requests:
               cpu: "100m"
               memory: "256Mi"
+
             limits:
               cpu: "500m"
               memory: "512Mi"
@@ -70,6 +81,7 @@ spec:
             httpGet:
               path: /api/health/live/
               port: 8000
+
             initialDelaySeconds: 15
             periodSeconds: 10
             timeoutSeconds: 5
@@ -78,6 +90,7 @@ spec:
             httpGet:
               path: /api/health/ready/
               port: 8000
+
             initialDelaySeconds: 20
             periodSeconds: 10
             timeoutSeconds: 5
