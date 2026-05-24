@@ -10,9 +10,6 @@ echo "Enter Django secret key:"
 read -s DJANGO_SECRET_KEY
 echo
 
-echo "Enter database user:"
-read DB_USER
-
 echo "Enter database password:"
 read -s DB_PASSWORD
 echo
@@ -29,9 +26,16 @@ kubectl -n "$NAMESPACE" create secret generic devsu-devops-python-secret \
 echo "Creating database secret..."
 kubectl -n "$NAMESPACE" delete secret devsu-devops-python-db-secret --ignore-not-found
 
+echo "Reading Cloud SQL public IP from Terraform output..."
+DB_HOST="$(cd terraform && terraform output -raw cloud_sql_public_ip)"
+
+echo "Reading database user from Terraform output..."
+DB_USER="$(cd terraform && terraform output -raw cloud_sql_user)"
+
 kubectl -n "$NAMESPACE" create secret generic devsu-devops-python-db-secret \
   --from-literal=DB_USER="$DB_USER" \
-  --from-literal=DB_PASSWORD="$DB_PASSWORD"
+  --from-literal=DB_PASSWORD="$DB_PASSWORD" \
+  --from-literal=DB_HOST="$DB_HOST"
 
 echo "Deleting previous migration job..."
 kubectl delete job "$JOB_NAME" -n "$NAMESPACE" --ignore-not-found

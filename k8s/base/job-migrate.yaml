@@ -5,22 +5,59 @@ metadata:
   labels:
     app: devsu-devops-python
     app.kubernetes.io/component: migration
+
 spec:
   backoffLimit: 3
+
   template:
     spec:
       restartPolicy: Never
+
       containers:
         - name: migrate
+
           image: ghcr.io/pepereyra/devsu-devops-python:latest
+          imagePullPolicy: Always
+
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
           command:
             - python
             - manage.py
             - migrate
+
           envFrom:
             - configMapRef:
                 name: devsu-devops-python-config
+
             - secretRef:
                 name: devsu-devops-python-secret
+
             - secretRef:
                 name: devsu-devops-python-db-secret
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+      volumes:
+        - name: tmp
+          emptyDir: {}

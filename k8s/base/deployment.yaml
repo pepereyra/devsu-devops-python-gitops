@@ -4,7 +4,6 @@ metadata:
   name: devsu-devops-python
 spec:
   replicas: 2
-
   revisionHistoryLimit: 5
 
   selector:
@@ -19,11 +18,26 @@ spec:
     spec:
       containers:
         - name: devsu-devops-python
-
           image: ghcr.io/pepereyra/devsu-devops-python:latest
+          imagePullPolicy: Always
+
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
 
           command:
             - gunicorn
+
           args:
             - demo.wsgi:application
             - --bind
@@ -32,7 +46,6 @@ spec:
             - "2"
             - --timeout
             - "60"
-          imagePullPolicy: Always
 
           ports:
             - containerPort: 8000
@@ -40,17 +53,15 @@ spec:
           envFrom:
             - configMapRef:
                 name: devsu-devops-python-config
-
             - secretRef:
                 name: devsu-devops-python-secret
-
             - secretRef:
                 name: devsu-devops-python-db-secret
 
           resources:
             requests:
               cpu: "100m"
-              memory: "128Mi"
+              memory: "256Mi"
             limits:
               cpu: "500m"
               memory: "512Mi"
@@ -70,3 +81,7 @@ spec:
             initialDelaySeconds: 20
             periodSeconds: 10
             timeoutSeconds: 5
+
+      volumes:
+        - name: tmp
+          emptyDir: {}

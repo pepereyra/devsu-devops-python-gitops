@@ -6,4 +6,7 @@ metadata:
 data:
   DJANGO_DEBUG: "False"
   DJANGO_ALLOWED_HOSTS: "*"
-  DATABASE_NAME: "db.sqlite3"
+
+  DB_ENGINE: "mysql"
+  DB_NAME: "devsu_demo"
+  DB_PORT: "3306"

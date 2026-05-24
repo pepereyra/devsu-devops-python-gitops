@@ -9,7 +9,5 @@ data:
   DJANGO_ALLOWED_HOSTS: "*"
 
   DB_ENGINE: "mysql"
-
   DB_NAME: "devsu_demo"
-  DB_HOST: "35.255.146.225"
   DB_PORT: "3306"
